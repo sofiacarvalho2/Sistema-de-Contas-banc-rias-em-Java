@@ -8,7 +8,6 @@
  */
 
 package Parcial1.java;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -17,6 +16,7 @@ import java.util.Scanner;
 public class Menu {
     
     private static final String ARQUIVO_CONTAS = "contas.txt";
+    private static ArrayList<String> listaContas = new ArrayList<>(); // Correção: adicionar "static"
 
     public static int menu(Scanner scanner) {
         int opcao;
@@ -24,11 +24,13 @@ public class Menu {
         System.out.println("\n****** Menu Contas Bancárias ******");
         System.out.println("1. Criar/Abrir arquivo de contas");
         System.out.println("2. Inserir conta");
-        System.out.println("3. Excluir conta");
-        System.out.println("4. pesquisar conta");
-        System.out.println("5. Imprimir lista de contas");
-        System.out.println("6. Excluir arquivo de contas");     
-        System.out.println("7. Sair");
+        System.out.println("3. Depositar");
+        System.out.println("4. Sacar");
+        System.out.println("5. pesquisar conta");
+        System.out.println("6. Imprimir lista de contas");
+        System.out.println("7. Excluir conta");
+        System.out.println("8. Excluir arquivo de contas");     
+        System.out.println("9. Sair");
         System.out.print("Escolha uma opção: ");
         opcao = scanner.nextInt();
         scanner.nextLine();
@@ -44,6 +46,7 @@ public class Menu {
             } else {
                 System.out.println("Arquivo de contas já existe.");
             }
+            carregarContasDoArquivo();
         } catch (IOException e) {
             System.out.println("Erro ao criar/abrir o arquivo de contas.");
             e.printStackTrace();
@@ -97,8 +100,59 @@ public class Menu {
             System.out.println("Erro ao inserir dados no arquivo.");
             e.printStackTrace();
         }
+        
+        listaContas.add(dadosConta);
+        salvarContasNoArquivo();
     }
 
+    private static void depositar(Scanner scanner) {
+        System.out.print("Digite o número da conta: ");
+        String numeroConta = scanner.nextLine();
+        System.out.print("Digite o valor do depósito: ");
+        double valorDeposito = scanner.nextDouble();
+        scanner.nextLine();
+
+        for (int i = 0; i < listaContas.size(); i++) {
+            String[] dadosConta = listaContas.get(i).split(",");
+            if (dadosConta[0].equals(numeroConta)) {
+                double saldo = Double.parseDouble(dadosConta[1]);
+                saldo += valorDeposito;
+                dadosConta[1] = String.valueOf(saldo);
+                listaContas.set(i, String.join(",", dadosConta));
+                salvarContasNoArquivo();
+                System.out.println("Depósito realizado com sucesso.");
+                return;
+            }
+        }
+        System.out.println("Conta não encontrada.");
+    }
+
+    private static void sacar(Scanner scanner) {
+        System.out.print("Digite o número da conta: ");
+        String numeroConta = scanner.nextLine();
+        System.out.print("Digite o valor do saque: ");
+        double valorSaque = scanner.nextDouble();
+        scanner.nextLine();
+
+        for (int i = 0; i < listaContas.size(); i++) {
+            String[] dadosConta = listaContas.get(i).split(",");
+            if (dadosConta[0].equals(numeroConta)) {
+                double saldo = Double.parseDouble(dadosConta[1]);
+                if (saldo >= valorSaque) {
+                    saldo -= valorSaque;
+                    dadosConta[1] = String.valueOf(saldo);
+                    listaContas.set(i, String.join(",", dadosConta));
+                    salvarContasNoArquivo();
+                    System.out.println("Saque realizado com sucesso.");
+                } else {
+                    System.out.println("Saldo insuficiente.");
+                }
+                return;
+            }
+        }
+        System.out.println("Conta não encontrada.");
+    }
+            
     private static void excluirConta(Scanner scanner) {
         System.out.print("Digite o número da conta a ser excluída: ");
         String numeroConta = scanner.nextLine();
@@ -127,6 +181,8 @@ public class Menu {
             System.out.println("Erro ao escrever no arquivo.");
             e.printStackTrace();
         }
+
+        salvarContasNoArquivo();
     }
 
     private static void pesquisarConta(Scanner scanner) {
@@ -173,6 +229,31 @@ public class Menu {
         }
     }
 
+    private static void carregarContasDoArquivo() {
+        listaContas.clear();
+        try (BufferedReader br = new BufferedReader(new FileReader(ARQUIVO_CONTAS))) {
+            String linha;
+            while ((linha = br.readLine()) != null) {
+                listaContas.add(linha);
+            }
+        } catch (IOException e) {
+            // Se o arquivo não existir, não faz nada
+        }
+    }
+
+    private static void salvarContasNoArquivo() {
+        try (FileWriter fw = new FileWriter(ARQUIVO_CONTAS);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(bw)) {
+            for (String linha : listaContas) {
+                out.println(linha);
+            }
+        } catch (IOException e) {
+            System.out.println("Erro ao salvar dados no arquivo.");
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         int opcao;
@@ -188,18 +269,24 @@ public class Menu {
                     inserirConta(scanner);
                     break;
                 case 3:
-                    excluirConta(scanner);
+                    depositar(scanner);
                     break;
                 case 4:
-                    pesquisarConta(scanner);
+                    sacar(scanner);
                     break;
                 case 5:
-                    imprimirListaContas();
+                    pesquisarConta(scanner);
                     break;
                 case 6:
-                    excluirArquivoContas();
+                    imprimirListaContas();
                     break;
                 case 7:
+                    excluirConta(scanner);
+                    break;
+                case 8:
+                    excluirArquivoContas();
+                    break;
+                case 9:
                     System.out.println("Saindo...");
                     break;
                 default:
@@ -208,7 +295,7 @@ public class Menu {
             System.out.println("Pressione **Enter** para continuar...");
             scanner.nextLine();
             System.out.println("Continuando o programa...");
-        } while (opcao != 7);
+        } while (opcao != 9);
 
         scanner.close();
     }
