@@ -88,8 +88,8 @@ O programa principal exibirá um menu com as seguintes opções:
 ## Próximos Passos
 
 * implementar métodos de formatação.
-* Implementar uma interface que define as operações básicas de uma conta bancária. 
+* Implementar uma interface que define as operações básicas de uma conta bancária.  ok
 * Implementar validações de entrada do usuário.
-* Adicionar funcionalidades extras, como transferência entre contas.
+* Adicionar funcionalidades extras, como transferência entre contas.a
 * Utilizar um banco de dados para armazenar os dados das contas.
 * Criar uma interface gráfica para o programa.

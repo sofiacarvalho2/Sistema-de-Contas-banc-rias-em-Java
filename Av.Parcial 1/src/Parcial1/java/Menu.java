@@ -28,13 +28,14 @@ public class Menu {
             System.out.println("\n****** Menu Contas Bancárias ******");
             System.out.println("1. Criar/Abrir arquivo de contas");
             System.out.println("2. Inserir conta");
-            System.out.println("3. Depositar");
-            System.out.println("4. Sacar");
-            System.out.println("5. pesquisar conta");
-            System.out.println("6. Imprimir lista de contas");
-            System.out.println("7. Excluir conta");
-            System.out.println("8. Excluir arquivo de contas");     
-            System.out.println("9. Sair");
+            System.out.println("3. Deposito");
+            System.out.println("4. Saque");
+            System.out.println("5. Transferência");
+            System.out.println("6. Pesquisar conta");
+            System.out.println("7. Imprimir lista de contas");
+            System.out.println("8. Excluir conta");
+            System.out.println("9. Excluir arquivo de contas");     
+            System.out.println("10. Sair");
             System.out.print("Escolha uma opção: ");
             
             try {
@@ -118,6 +119,7 @@ public class Menu {
     }
 
     private static void depositar(Scanner scanner) {
+        System.out.print("Digite o número da conta: ");
         String numeroConta = validarNumeroConta(scanner);
         if (numeroConta == null) return;
     
@@ -140,6 +142,7 @@ public class Menu {
     }
 
     private static void sacar(Scanner scanner) {
+        System.out.print("Digite o número da conta: ");
         String numeroConta = validarNumeroConta(scanner);
         if (numeroConta == null) return;
     
@@ -163,6 +166,67 @@ public class Menu {
             }
         }
         System.out.println("Conta não encontrada.");
+    }
+
+    private static void transferir(Scanner scanner) {
+        
+        System.out.print("Digite o número da conta de origem: ");
+        String contaOrigem = validarNumeroConta(scanner);
+        if (contaOrigem == null) return;
+
+        System.out.print("Digite o número da conta de destino: ");
+        String contaDestino = validarNumeroConta(scanner);
+        if (contaDestino == null) return;
+
+        double valorTranferencia = validarValor(scanner, "transferência");
+        if (valorTranferencia <= 0) return;
+
+        if (contaOrigem.equals(contaDestino)) {
+            System.out.println("Conta de origem e destino devem ser diferentes.");
+            return;
+        }
+
+        int indiceOrigem = -1;
+        int indiceDestino = -1;
+
+        for (int i = 0; i < listaContas.size(); i++) {
+            String[] dadosConta = listaContas.get(i).split(",");
+            if (dadosConta[0].equals(contaOrigem)) {
+                indiceOrigem = i;
+            }
+            if (dadosConta[0].equals(contaDestino)) {
+                indiceDestino = i;
+            }
+        }
+
+        if (indiceOrigem == -1 || indiceDestino == -1){
+            System.out.println("Conta de origem ou destino não encontrada");
+            return;
+        }
+        
+        String[] dadosOrigem = listaContas.get(indiceOrigem).split(",");
+        String[] dadosDestino = listaContas.get(indiceDestino).split(",");
+
+        double saldoOrigem = Double.parseDouble(dadosOrigem[1]);
+        double saldoDestino = Double.parseDouble(dadosDestino[1]);
+
+        if (saldoOrigem < valorTranferencia) {
+            System.out.println("Saldo insuficiente na conta de origem.");
+            return;
+        }
+
+        saldoOrigem -= valorTranferencia;
+        saldoDestino += valorTranferencia;
+
+        dadosOrigem[1] = String.valueOf(saldoOrigem);
+        dadosDestino[1] = String.valueOf(saldoDestino);
+        
+        listaContas.set(indiceOrigem, String.join(",", dadosOrigem));
+        listaContas.set(indiceDestino, String.join(",", dadosDestino));
+
+        salvarContasNoArquivo();
+
+        System.out.println("Transferência realizada com sucesso.");
     }
             
     private static void excluirConta(Scanner scanner) {
@@ -242,7 +306,6 @@ public class Menu {
     }
 
     private static String validarNumeroConta(Scanner scanner) {
-        System.out.println("Digite o número da conta: ");
         String numeroConta = scanner.nextLine();
 
         if (!numeroConta.matches("\\d+")) {
@@ -263,8 +326,9 @@ public class Menu {
             System.out.println("Conta não encontrada.");
             return null;
         }
-        return numeroConta;
+        return numeroConta;     
     }
+
 
     private static double validarValor(Scanner scanner, String tipoOperacao) {
         double valor = 0;
@@ -285,7 +349,7 @@ public class Menu {
     
         return valor;
     }
-    
+
 
     private static void carregarContasDoArquivo() {
         listaContas.clear();
@@ -333,18 +397,21 @@ public class Menu {
                     sacar(scanner);
                     break;
                 case 5:
-                    pesquisarConta(scanner);
+                    transferir(scanner);
                     break;
                 case 6:
-                    imprimirListaContas();
+                    pesquisarConta(scanner);
                     break;
                 case 7:
-                    excluirConta(scanner);
+                    imprimirListaContas();
                     break;
                 case 8:
-                    excluirArquivoContas();
+                    excluirConta(scanner);
                     break;
                 case 9:
+                    excluirArquivoContas();
+                    break;
+                case 10:
                     System.out.println("Saindo...");
                     break;
                 default:
