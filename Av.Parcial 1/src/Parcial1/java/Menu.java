@@ -10,7 +10,9 @@
 package Parcial1.java;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.Scanner;
+
 
 // Menu
 public class Menu {
@@ -19,23 +21,33 @@ public class Menu {
     private static ArrayList<String> listaContas = new ArrayList<>(); // Correção: adicionar "static"
 
     public static int menu(Scanner scanner) {
-        int opcao;
+        int opcao = 0;
+        boolean entradaValida = false;
 
-        System.out.println("\n****** Menu Contas Bancárias ******");
-        System.out.println("1. Criar/Abrir arquivo de contas");
-        System.out.println("2. Inserir conta");
-        System.out.println("3. Depositar");
-        System.out.println("4. Sacar");
-        System.out.println("5. pesquisar conta");
-        System.out.println("6. Imprimir lista de contas");
-        System.out.println("7. Excluir conta");
-        System.out.println("8. Excluir arquivo de contas");     
-        System.out.println("9. Sair");
-        System.out.print("Escolha uma opção: ");
-        opcao = scanner.nextInt();
+        while (!entradaValida) {
+            System.out.println("\n****** Menu Contas Bancárias ******");
+            System.out.println("1. Criar/Abrir arquivo de contas");
+            System.out.println("2. Inserir conta");
+            System.out.println("3. Depositar");
+            System.out.println("4. Sacar");
+            System.out.println("5. pesquisar conta");
+            System.out.println("6. Imprimir lista de contas");
+            System.out.println("7. Excluir conta");
+            System.out.println("8. Excluir arquivo de contas");     
+            System.out.println("9. Sair");
+            System.out.print("Escolha uma opção: ");
+            
+            try {
+                opcao = scanner.nextInt();
+                entradaValida = true;
+            } catch (InputMismatchException e) {
+                System.out.println("Opção inválida. Digite um número inteiro.");
+                scanner.nextInt();
+            }
+        }
         scanner.nextLine();
 
-        return opcao;
+        return opcao; 
     }
 
     private static void criarAbrirArquivoContas() {
@@ -106,12 +118,12 @@ public class Menu {
     }
 
     private static void depositar(Scanner scanner) {
-        System.out.print("Digite o número da conta: ");
-        String numeroConta = scanner.nextLine();
-        System.out.print("Digite o valor do depósito: ");
-        double valorDeposito = scanner.nextDouble();
-        scanner.nextLine();
-
+        String numeroConta = validarNumeroConta(scanner);
+        if (numeroConta == null) return;
+    
+        double valorDeposito = validarValor(scanner, "depósito");
+        if (valorDeposito <= 0) return;
+    
         for (int i = 0; i < listaContas.size(); i++) {
             String[] dadosConta = listaContas.get(i).split(",");
             if (dadosConta[0].equals(numeroConta)) {
@@ -128,12 +140,12 @@ public class Menu {
     }
 
     private static void sacar(Scanner scanner) {
-        System.out.print("Digite o número da conta: ");
-        String numeroConta = scanner.nextLine();
-        System.out.print("Digite o valor do saque: ");
-        double valorSaque = scanner.nextDouble();
-        scanner.nextLine();
-
+        String numeroConta = validarNumeroConta(scanner);
+        if (numeroConta == null) return;
+    
+        double valorSaque = validarValor(scanner, "saque");
+        if (valorSaque <= 0) return;
+    
         for (int i = 0; i < listaContas.size(); i++) {
             String[] dadosConta = listaContas.get(i).split(",");
             if (dadosConta[0].equals(numeroConta)) {
@@ -228,6 +240,52 @@ public class Menu {
             System.out.println("Falha ao deletar o arquivo de contas.");
         }
     }
+
+    private static String validarNumeroConta(Scanner scanner) {
+        System.out.println("Digite o número da conta: ");
+        String numeroConta = scanner.nextLine();
+
+        if (!numeroConta.matches("\\d+")) {
+            System.out.println("Número de conta inválido. Digite apenas números.");
+            return null;
+        }
+
+        // Verificar se a conta existe
+        boolean contaExiste = false;
+        for (String conta : listaContas) {
+            if (conta.split(",")[0].equals(numeroConta)) {
+                contaExiste = true;
+                break;
+            }
+        }
+
+        if (!contaExiste) {
+            System.out.println("Conta não encontrada.");
+            return null;
+        }
+        return numeroConta;
+    }
+
+    private static double validarValor(Scanner scanner, String tipoOperacao) {
+        double valor = 0;
+        boolean entradaValida = false;
+    
+        while (!entradaValida) {
+            System.out.print("Digite o valor do " + tipoOperacao + ": ");
+            try {
+                valor = scanner.nextDouble();
+                System.out.println("Valor digitado: " + valor); // Adicionar esta linha
+                entradaValida = true;
+            } catch (InputMismatchException e) {
+                System.out.println("Valor inválido. Digite um número.");
+                scanner.nextLine(); // Limpar o buffer do scanner
+            }
+        }
+        scanner.nextLine(); // Consumir a quebra de linha
+    
+        return valor;
+    }
+    
 
     private static void carregarContasDoArquivo() {
         listaContas.clear();
