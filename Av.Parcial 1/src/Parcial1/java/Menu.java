@@ -8,9 +8,12 @@
  */
 
 package Parcial1.java;
+
 import java.io.*;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
+import java.util.Locale;
 import java.util.Scanner;
 
 
@@ -70,38 +73,38 @@ public class Menu {
         System.out.print("Digite o número da conta: ");
         String numeroConta = scanner.nextLine();
         System.out.print("Digite o saldo inicial: ");
-        double saldo = scanner.nextDouble();
-        scanner.nextLine(); // Consumir a quebra de linha
+        double saldoInicial = scanner.nextDouble();
+        scanner.nextLine();
         System.out.print("Digite o tipo da conta (Corrente, Poupanca, Salario, Internacional): ");
         String tipoConta = scanner.nextLine();
 
         String dadosConta;
-        switch (tipoConta.toLowerCase()) {
+        switch (tipoConta.toLowerCase())  {
             case "corrente":
                 System.out.print("Digite o limite do cheque especial: ");
                 double limiteChequeEspecial = scanner.nextDouble();
-                scanner.nextLine(); // Consumir a quebra de linha
-                dadosConta = numeroConta + "," + saldo + "," + tipoConta + "," + limiteChequeEspecial;
+                scanner.nextLine();
+                dadosConta = numeroConta + "," + saldoInicial + "," + tipoConta + "," + limiteChequeEspecial;
                 break;
             case "poupanca":
                 System.out.print("Digite a taxa de juros: ");
                 double taxaJuros = scanner.nextDouble();
-                scanner.nextLine(); // Consumir a quebra de linha
-                dadosConta = numeroConta + "," + saldo + "," + tipoConta + "," + taxaJuros;
+                scanner.nextLine();
+                dadosConta = numeroConta + "," + saldoInicial + "," + tipoConta + "," + taxaJuros;
                 break;
             case "salario":
                 System.out.print("Digite a empresa vinculada: ");
                 String empresaVinculada = scanner.nextLine();
-                dadosConta = numeroConta + "," + saldo + "," + tipoConta + "," + empresaVinculada;
+                dadosConta = numeroConta + "," + saldoInicial + "," + tipoConta + "," + empresaVinculada;
                 break;
             case "internacional":
-                System.out.print("Digite a moeda estrangeira: ");
+                System.out.print("Digite a moeda estrangeira (língua e país. ex: en-US): ");
                 String moedaEstrangeira = scanner.nextLine();
-                dadosConta = numeroConta + "," + saldo + "," + tipoConta + "," + moedaEstrangeira;
+                dadosConta = numeroConta + "," + saldoInicial + "," + tipoConta + "," + moedaEstrangeira;
                 break;
             default:
                 System.out.println("Tipo de conta inválido. Conta genérica criada.");
-                dadosConta = numeroConta + "," + saldo + "," + "Generica";
+                dadosConta = numeroConta + "," + saldoInicial + "," + "Generica";
         }
 
         try (FileWriter fw = new FileWriter(ARQUIVO_CONTAS, true);
@@ -122,10 +125,10 @@ public class Menu {
         System.out.print("Digite o número da conta: ");
         String numeroConta = validarNumeroConta(scanner);
         if (numeroConta == null) return;
-    
+
         double valorDeposito = validarValor(scanner, "depósito");
         if (valorDeposito <= 0) return;
-    
+
         for (int i = 0; i < listaContas.size(); i++) {
             String[] dadosConta = listaContas.get(i).split(",");
             if (dadosConta[0].equals(numeroConta)) {
@@ -134,7 +137,7 @@ public class Menu {
                 dadosConta[1] = String.valueOf(saldo);
                 listaContas.set(i, String.join(",", dadosConta));
                 salvarContasNoArquivo();
-                System.out.println("Depósito realizado com sucesso.");
+                System.out.println("Depósito realizado com sucesso. Novo saldo: " + formatarValor(saldo, "pt-BR")); // Modificação
                 return;
             }
         }
@@ -158,7 +161,7 @@ public class Menu {
                     dadosConta[1] = String.valueOf(saldo);
                     listaContas.set(i, String.join(",", dadosConta));
                     salvarContasNoArquivo();
-                    System.out.println("Saque realizado com sucesso.");
+                    System.out.println("Saque realizado com sucesso. Novo saldo: " + formatarValor(saldo, "pt-BR")); // Modificação
                 } else {
                     System.out.println("Saldo insuficiente.");
                 }
@@ -226,7 +229,8 @@ public class Menu {
 
         salvarContasNoArquivo();
 
-        System.out.println("Transferência realizada com sucesso.");
+        System.out.println("Transferência realizada com sucesso. Novo saldo da conta de origem: " + formatarValor(saldoOrigem, "pt-BR")); // Modificação
+        System.out.println("Novo saldo da conta de destino: " + formatarValor(saldoDestino, "pt-BR")); // Modificação
     }
             
     private static void excluirConta(Scanner scanner) {
@@ -269,8 +273,14 @@ public class Menu {
             String linha;
             boolean encontrado = false;
             while ((linha = br.readLine()) != null) {
-                if (linha.split(",")[0].equalsIgnoreCase(numeroConta)) {
-                    System.out.println("Conta encontrada: " + linha);
+                String[] dadosConta = linha.split(",");
+                if (dadosConta[0].equalsIgnoreCase(numeroConta)) {
+                    double saldo = Double.parseDouble(dadosConta[1]);
+                    String moeda = "pt-BR"; // Moeda padrão para outros tipos de conta
+                    if (dadosConta.length > 3 && dadosConta[2].equalsIgnoreCase("internacional")) {
+                        moeda = dadosConta[3]; // Usar moeda da conta internacional
+                    }
+                    System.out.println("Conta encontrada: " + dadosConta[0] + ", Saldo: " + formatarValor(saldo, moeda));
                     encontrado = true;
                 }
             }
@@ -288,7 +298,13 @@ public class Menu {
             String linha;
             System.out.println("\nLista de Contas Bancárias:");
             while ((linha = br.readLine()) != null) {
-                System.out.println(linha);
+                String[] dadosConta = linha.split(",");
+                double saldo = Double.parseDouble(dadosConta[1]);
+                String moeda = "pt-BR"; // Moeda padrão para outros tipos de conta
+                if (dadosConta.length > 3 && dadosConta[2].equalsIgnoreCase("internacional")) {
+                    moeda = dadosConta[3]; // Usar moeda da conta internacional
+                }
+                System.out.println("Conta: " + dadosConta[0] + ", Saldo: " + formatarValor(saldo, moeda));
             }
         } catch (IOException e) {
             System.out.println("Erro ao ler o arquivo.");
@@ -296,13 +312,20 @@ public class Menu {
         }
     }
 
+
     private static void excluirArquivoContas() {
         File arquivo = new File(ARQUIVO_CONTAS);
         if (arquivo.delete()) {
             System.out.println("Arquivo de contas deletado: " + arquivo.getName());
-        } else {
+        } else {                                                
             System.out.println("Falha ao deletar o arquivo de contas.");
         }
+    }
+
+    private static String formatarValor(double valor, String moeda) {
+        Locale local = new Locale.Builder().setLanguage(moeda.substring(0, 2)).setRegion(moeda.substring(3, 5)).build();
+        NumberFormat formatoMoeda = NumberFormat.getCurrencyInstance(local);
+        return formatoMoeda.format(valor);
     }
 
     private static String validarNumeroConta(Scanner scanner) {

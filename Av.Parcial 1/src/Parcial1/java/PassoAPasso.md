@@ -87,7 +87,7 @@ O programa principal exibirá um menu com as seguintes opções:
 
 ## Próximos Passos
 
-* implementar métodos de formatação.
+* implementar métodos de formatação. (Para o símbolo da moeda aparecer corretamente é necessario configurar a codificação do sistema operacional para UTF-8) ok
 * Implementar uma interface que define as operações básicas de uma conta bancária.  ok
 * Implementar validações de entrada do usuário. ok
 * Adicionar funcionalidades extras, como transferência entre contas. ok
